@@ -45,6 +45,24 @@ public class Core  {
         this.applications = applications;
     }
 
+    //增加GC统计信息
+    //Parallel GC模式 （jdk1.8 默认垃圾收集器Parallel Scavenge（新生代）+Parallel Old（老年代））
+    private final static Map<String,String> GC_ParallelMap=getGCMetricsList("young.gc.count:gc.ps_scavenge.count|young.gc.time:gc.ps_scavenge.time|old.gc.count:gc.ps_marksweep.count|old.gc.time:gc.ps_marksweep.time");
+    //G1 GC模式  默认：(老年代使用G1)（新生代使用G1）
+    private final static Map<String,String> GC_G1Map=getGCMetricsList("young.gc.count:gc.g1_young_generation.count|young.gc.time:gc.g1_young_generation.time|old.gc.count:gc.g1_old_generation.count|old.gc.time:gc.g1_old_generation.time");
+    //CMS GC模式 默认：(老年代使用CMS)（新生代使用ParNew）
+    private final static Map<String,String> GC_CMSMap=getGCMetricsList("young.gc.count:gc.parnew.count|young.gc.time:gc.parnew.time|old.gc.count:gc.concurrentmarksweep.count|old.gc.time:gc.concurrentmarksweep.time");
+
+    private static Map<String,String> getGCMetricsList(String metrics) {
+        List<String> metricsList= Arrays.asList(metrics.split("\\|"));
+        Map<String,String>metricsMap=new HashMap<>();
+        for (String item:metricsList) {
+            String[] itemArr=item.split(":");
+            metricsMap.put(itemArr[1].trim(),itemArr[0].trim());
+        }
+        return metricsMap;
+    }
+
     @Scheduled(cron = "*/10 * * * * *")
     public void run(){
         if(applications.getServices() != null){
@@ -66,6 +84,12 @@ public class Core  {
                                 Map.Entry mentry = (Map.Entry)iterator.next();
                                 if(Arrays.asList(metricsToMonitor).contains(mentry.getKey())){
                                     fields.put((String) mentry.getKey(), mentry.getValue()) ;
+                                    continue;
+                                }
+                                GCMetricsInfo gcMetricsInfo= getGCMetricsInfo(mentry.getKey().toString());
+                                if(gcMetricsInfo!=null){
+                                    fields.put(gcMetricsInfo.getMetricsName(),mentry.getValue());
+                                    fields.put("java.gc.type",gcMetricsInfo.getMetricsType());
                                 }
                             }
                         }
@@ -77,6 +101,36 @@ public class Core  {
                     }
                 }
             }
+        }
+    }
+    //增加GC统计信息
+    private GCMetricsInfo getGCMetricsInfo(String key) {
+        String metricsName=null;
+        metricsName=GC_ParallelMap.get(key);
+        if(metricsName!=null){return new GCMetricsInfo(1,metricsName);}
+        metricsName=GC_CMSMap.get(key);
+        if(metricsName!=null){return new GCMetricsInfo(2,metricsName);}
+        metricsName=GC_G1Map.get(key);
+        if(metricsName!=null){return new GCMetricsInfo(3,metricsName);}
+        return null;
+    }
+    class GCMetricsInfo{
+        //GC 类型
+        private Integer metricsType;
+        //GC 指标名
+        private String metricsName;
+
+        public GCMetricsInfo(Integer metricsType,String metricsName) {
+            this.metricsType = metricsType;
+            this.metricsName=metricsName;
+        }
+
+        public Integer getMetricsType() {
+            return metricsType;
+        }
+
+        public String getMetricsName() {
+            return metricsName;
         }
     }
 }

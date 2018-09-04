@@ -3,11 +3,11 @@ server:
 
 infludb:
     server:
-        host: 127.0.0.1
+        host: 192.168.0.28
         port: 8086
         dbname: influxdb1
-        username: root
-        password: root
+        username: admin
+        password: 123456
         retentionPolicy: default
 
     metrics: mem,mem.free,processors,instance.uptime,uptime,systemload.average,heap.committed,heap.init,heap.used,heap,nonheap.committed,nonheap.init,nonheap.used,nonheap,threads.peak,threads.daemon,threads.totalStarted,threads

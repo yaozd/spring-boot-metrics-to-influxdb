@@ -22,6 +22,7 @@ The Grafana monitoring system must be downloaded and installed. You can download
 ## Deploy services
 
 ----
+```
 $ cd spring-boot-metrics-to-influxdb \
 $ mvn clean \
 $ mvn install \
@@ -33,7 +34,7 @@ $ cd microservice.service.1/target \
 $ java -XX:+UseG1GC -Xmx70m -Xms32m -jar ms-service-1.jar \
 $ cd app.metrics-to-influxdb.service/target \
 $ java -XX:+UseG1GC -Xmx80m -Xms32m -jar app-metrics-to-influxdb.jar
-
+```
 ----
 When you start the app-metrics-to-influxdb.jar service you can see in the following image how the registered applications in Eureka Server are obtained and the metrics specified in the application.yml file are sent for InfluxDB. The connection data for InfluxDB as well as the services that you want your metrics to be monitored are specified in that same file.
 
